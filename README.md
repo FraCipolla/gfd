@@ -98,7 +98,7 @@ gfd sync
 Assign work directly inside your code:
 
 ```cpp
-// TODO(alex): Fix spatial hash grid bounds checking on chunk load
+// @alex: Fix spatial hash grid bounds checking on chunk load
 void update_physics_chunk(Chunk *chunk) {
     // ...
 }
@@ -142,7 +142,7 @@ gfd milestone "Added player locomotion and jump physics"
 Tasks are declared directly inside source files (`.cpp`, `.h`, `.c`, `.odin`, `.hlsl`, etc.):
 
 ```odin
-// TODO(casey): Optimize particle allocation buffer to eliminate alloc thrashing
+// @casey: Optimize particle allocation buffer to eliminate alloc thrashing
 update_particles :: proc(sys: ^Particle_System) {
     // ...
 }
@@ -150,21 +150,10 @@ update_particles :: proc(sys: ^Particle_System) {
 ```
 
 ```c
-// BLOCKER(john): Player clips through slope geometry at angles > 45 deg
+// @john: Player clips through slope geometry at angles > 45 deg
 void check_terrain_collision(Entity *player) {
     // ...
 }
 
 ```
 
-Supported tags:
-
-* `TODO(name)`: General task or feature assignment.
-* `FIX(name)`: Bug fix assignment.
-* `BLOCKER(name)`: High-priority issue (prevents milestone generation if unfixed).
-
----
-
-## License
-
-MIT License. Free for open-source and commercial use.
