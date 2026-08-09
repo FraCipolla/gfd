@@ -95,6 +95,8 @@ get_changed_files_between_range :: proc(diff_range: string) -> [dynamic]string {
 }
 
 try_clean_auto_merge :: proc(file_path, peer_ref, user: string) -> bool {
+	os.make_directory_all(".gfd")
+
 	safe_name, _ := strings.replace_all(file_path, "/", "_", context.temp_allocator)
 	safe_name, _ = strings.replace_all(safe_name, "\\", "_", context.temp_allocator)
 
@@ -162,6 +164,10 @@ push_local_shadow_branch :: proc(user: string) {
 	if !commit_res.ok do return
 	shadow_hash := strings.trim_space(commit_res.stdout)
 
+	// Update local ref so local diffs compare against our last synced state
+	user_ref := fmt.tprintf("refs/sync/%s", user)
+	_ = run_git({"update-ref", user_ref, shadow_hash})
+
 	push_ref := fmt.tprintf("%s:refs/sync/%s", shadow_hash, user)
 	_ = run_git({"push", "origin", push_ref, "--force"})
 }
@@ -171,7 +177,8 @@ exec_sync :: proc() {
 	_, ok := get_git_root()
 	if !ok do return
 
-	run_git({"fetch", "origin"})
+	// Ensure remote sync references are explicitly fetched to refs/remotes/sync/
+	run_git({"fetch", "origin", "+refs/sync/*:refs/remotes/sync/*"})
 
 	peers := get_active_peer_handles(user)
 
@@ -193,6 +200,10 @@ exec_sync :: proc() {
 			last_commit := strings.trim_space(string(last_commit_bytes))
 			diff_range := fmt.tprintf("%s..%s", last_commit, current_peer_commit)
 			newly_changed_files = get_changed_files_between_range(diff_range)
+			// Fallback if watermark commit hash is stale or no longer reachable
+			if len(newly_changed_files) == 0 && last_commit != current_peer_commit {
+				newly_changed_files = get_changed_files_between("HEAD", peer_ref)
+			}
 		} else {
 			newly_changed_files = get_changed_files_between("HEAD", peer_ref)
 		}
